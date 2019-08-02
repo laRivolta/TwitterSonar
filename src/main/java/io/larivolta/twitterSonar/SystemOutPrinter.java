@@ -1,8 +1,7 @@
 package io.larivolta.twitterSonar;
 
-public class SystemOutPrinter implements IPrinter {
+public class SystemOutPrinter {
 
-    @Override
     public void print(String message) {
         System.out.println(message);
     }

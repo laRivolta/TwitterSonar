@@ -11,7 +11,7 @@ import io.larivolta.twitterSonar.model.TwitterActivity;
 import twitter4j.*;
 import twitter4j.conf.ConfigurationBuilder;
 
-public class TwitterSearcher implements ITwitterSearcher {
+public class TwitterSearcher {
 
     private Twitter getTwitterInstance() {
         TwitterFactory tf = new TwitterFactory(new ConfigurationBuilder().build());
@@ -20,7 +20,7 @@ public class TwitterSearcher implements ITwitterSearcher {
 
     public void getUserTimeline(String screenName) {
 
-        IPrinter sop = new SystemOutPrinter();
+        SystemOutPrinter sop = new SystemOutPrinter();
 
         try {
             getTwitterInstance()
@@ -31,28 +31,6 @@ public class TwitterSearcher implements ITwitterSearcher {
                     });
         } catch (TwitterException te) {
             sop.print("Failed to search tweets: " + te.getMessage());
-        }
-    }
-
-    public void printUserTweets(String username) {
-
-        IPrinter sop = new SystemOutPrinter();
-
-        try {
-            Query query = new Query(username);
-            QueryResult result;
-            do {
-                result = getTwitterInstance().search(query);
-                result.getTweets()
-                        .stream()
-                        .forEach(tweet -> sop.print("@" + tweet.getUser().getScreenName() + " - " + tweet.getText()));
-
-            } while ((query = result.nextQuery()) != null);
-            System.exit(0);
-        } catch (TwitterException te) {
-            te.printStackTrace();
-            sop.print("Failed to search tweets: " + te.getMessage());
-            System.exit(-1);
         }
     }
     
