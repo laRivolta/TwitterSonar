@@ -13,25 +13,36 @@ import twitter4j.conf.ConfigurationBuilder;
 
 public class TwitterSearcher implements ITwitterSearcher {
 
+    private Twitter getTwitterInstance() {
+        TwitterFactory tf = new TwitterFactory(new ConfigurationBuilder().build());
+        return tf.getInstance();
+    }
+
+    public void getUserTimeline(String screenName) {
+
+        IPrinter sop = new SystemOutPrinter();
+
+        try {
+            getTwitterInstance()
+                    .getUserTimeline(screenName)
+                    .stream()
+                    .forEach(tweet -> {
+                        sop.print("@" + tweet.getUser().getScreenName() + " - " + tweet.getText());
+                    });
+        } catch (TwitterException te) {
+            sop.print("Failed to search tweets: " + te.getMessage());
+        }
+    }
 
     public void printUserTweets(String username) {
 
         IPrinter sop = new SystemOutPrinter();
-        ConfigurationBuilder cb = new ConfigurationBuilder();
-
-        cb.setDebugEnabled(true)
-                .setOAuthConsumerKey(TWITTER_CONSUMER_KEY)
-                .setOAuthConsumerSecret(TWITTER_SECRET_KEY)
-                .setOAuthAccessToken(TWITTER_ACCESS_TOKEN)
-                .setOAuthAccessTokenSecret(TWITTER_ACCESS_TOKEN_SECRET);
-        TwitterFactory tf = new TwitterFactory(cb.build());
-        Twitter twitter = tf.getInstance();
 
         try {
             Query query = new Query(username);
             QueryResult result;
             do {
-                result = twitter.search(query);
+                result = getTwitterInstance().search(query);
                 result.getTweets()
                         .stream()
                         .forEach(tweet -> sop.print("@" + tweet.getUser().getScreenName() + " - " + tweet.getText()));
@@ -45,40 +56,8 @@ public class TwitterSearcher implements ITwitterSearcher {
         }
     }
     
-    
-    public void printUserLastMinutesActivity(String username, int minutes) {
-
-        IPrinter sop = new SystemOutPrinter();
-        
-        try {
-        	List<TwitterActivity> userActivities = getLastMinutesUserTweets(username, minutes);
-        	TwitterActivity tweet;
-        	sop.print("Tweets para " +username + ":");
-        	for (int i = 0; i < userActivities.size(); i++) {
-            	tweet = userActivities.get(i);
-                sop.print("@" + tweet.getScreen_name() + " - " + tweet.getCreated_at().toString() + " - " + tweet.getText());
-
-            }
-        	sop.print("---------------");
-            System.exit(0);
-        } catch (Exception e) {
-            e.printStackTrace();
-            sop.print("Failed to search tweets: " + e.getMessage());
-            System.exit(-1);
-        }
-    }
-    
     public List<TwitterActivity> getLastMinutesUserTweets(String username, int minutes) {
     	List<TwitterActivity> userActivities = new ArrayList<TwitterActivity>(0);
-        ConfigurationBuilder cb = new ConfigurationBuilder();
-
-        cb.setDebugEnabled(true)
-                .setOAuthConsumerKey(TWITTER_CONSUMER_KEY)
-                .setOAuthConsumerSecret(TWITTER_SECRET_KEY)
-                .setOAuthAccessToken(TWITTER_ACCESS_TOKEN)
-                .setOAuthAccessTokenSecret(TWITTER_ACCESS_TOKEN_SECRET);
-        TwitterFactory tf = new TwitterFactory(cb.build());
-        Twitter twitter = tf.getInstance();
 
         try {
         	QueryResult result;
@@ -95,7 +74,7 @@ public class TwitterSearcher implements ITwitterSearcher {
 	        Date minHour = cal.getTime();
 	        
             do {
-                result = twitter.search(query);
+                result = getTwitterInstance().search(query);
                 result.getTweets()
                         .stream()
                         .filter(s -> s.getCreatedAt().after(minHour))
