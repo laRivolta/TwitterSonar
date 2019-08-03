@@ -1,71 +1,96 @@
 package io.larivolta.twitterSonar;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
 import io.larivolta.twitterSonar.model.TwitterActivity;
-import twitter4j.*;
+import twitter4j.Twitter;
+import twitter4j.TwitterException;
+import twitter4j.TwitterFactory;
 import twitter4j.conf.ConfigurationBuilder;
 
 public class TwitterSearcher {
+	Twitter twitterInstance;
 
-    private Twitter getTwitterInstance() {
-        TwitterFactory tf = new TwitterFactory(new ConfigurationBuilder().build());
-        return tf.getInstance();
-    }
+	public TwitterSearcher() {
+		twitterInstance = this.getTwitterInstance();
+	}
 
-    public void getUserTimeline(String screenName) {
+	private Twitter getTwitterInstance() {
+		TwitterFactory tf = new TwitterFactory(new ConfigurationBuilder().build());
+		return tf.getInstance();
+	}
 
-        SystemOutPrinter sop = new SystemOutPrinter();
+	/**
+	 * The userActivities list is composed of: - A list of tweets, retweets and
+	 * replies (max 20) + a list of likes (max 20)
+	 */
+	public void printUserTweetsSince(String screenName, int minutes) {
+		try {
+			getUserActivitiesSince(screenName, minutes).forEach(tweet -> {
+				System.out.println("@" + tweet.getScreen_name() + " - " + tweet.getCreated_at().toString() + " - "
+						+ tweet.getText());
 
-        try {
-            getTwitterInstance()
-                    .getUserTimeline(screenName)
-                    .stream()
-                    .forEach(tweet -> {
-                        sop.print("@" + tweet.getUser().getScreenName() + " - " + tweet.getText());
-                    });
-        } catch (TwitterException te) {
-            sop.print("Failed to search tweets: " + te.getMessage());
-        }
-    }
-    
-    public List<TwitterActivity> getLastMinutesUserTweets(String username, int minutes) {
-    	List<TwitterActivity> userActivities = new ArrayList<TwitterActivity>(0);
+			});
+		} catch (Exception e) {
+			System.out.println("Failed to search tweets: " + e.getMessage());
+		}
+	}
 
-        try {
-        	QueryResult result;
-        	Query query = new Query(username);
-            Date today = Calendar.getInstance().getTime();
-            DateFormat dateFormat = new SimpleDateFormat("YYYY-MM-dd");
-            String strToday = dateFormat.format(today);
-            query.setSince(strToday); //TODO ojo medianoche
-            query.count(5);	//TODO ampliar tras finalizar
-            
-            Calendar cal = Calendar.getInstance();
-	        cal.add(Calendar.MINUTE, -minutes);
-	        System.out.println("Hace " + minutes + " minutos " + cal.get(Calendar.HOUR_OF_DAY) + ":"+cal.get(Calendar.MINUTE));
-	        Date minHour = cal.getTime();
-	        
-            do {
-                result = getTwitterInstance().search(query);
-                result.getTweets()
-                        .stream()
-                        .filter(s -> s.getCreatedAt().after(minHour))
-                        .forEach(tweet -> userActivities.add(new TwitterActivity(tweet.getUser().getScreenName(), tweet.getCreatedAt(), tweet.getText())));
+	public List<TwitterActivity> getUserActivitiesSince(String screenName, int minutes) {
+		List<TwitterActivity> userActivities = new ArrayList<TwitterActivity>(0);
+		userActivities.addAll(getUserTweetsSince(screenName, minutes));
+		userActivities.addAll(getUserLikesSince(screenName, minutes));
+		System.out.println(screenName + " == " + userActivities.size());
+		return userActivities;
+	}
 
-            } while ((query = result.nextQuery()) != null);
-    
-        } catch (TwitterException te) {
-            te.printStackTrace();
-            System.out.println("Failed to get last tweets: " + te.getMessage());
-        }
+	/**
+	 * It obtains the last tweets, retweets and replies since the specified amount
+	 * of minutes. Max: 20 tweets
+	 */
+	public List<TwitterActivity> getUserTweetsSince(String screenName, int minutes) {
+		List<TwitterActivity> userTweets = new ArrayList<TwitterActivity>(0);
 
-        return userActivities;
-    }
-    
+		Calendar cal = Calendar.getInstance();
+		cal.add(Calendar.MINUTE, -minutes);
+		Date minHour = cal.getTime();
+
+		try {
+			this.twitterInstance.getUserTimeline(screenName).stream().filter(s -> s.getCreatedAt().after(minHour))
+					.forEach(tweet -> userTweets.add(new TwitterActivity(tweet.getUser().getScreenName(),
+							tweet.getCreatedAt(), tweet.getText())));
+
+		} catch (TwitterException te) {
+			te.printStackTrace();
+			System.out.println("Failed to get last tweets: " + te.getMessage());
+		}
+
+		return userTweets;
+	}
+
+	/**
+	 * It obtains the last tweets, retweets and replies since the specified amount
+	 * of minutes. Max: 20 tweets
+	 */
+	public List<TwitterActivity> getUserLikesSince(String screenName, int minutes) {
+		List<TwitterActivity> userLikes = new ArrayList<TwitterActivity>(0);
+		Calendar cal = Calendar.getInstance();
+		cal.add(Calendar.MINUTE, -minutes);
+		Date minHour = cal.getTime();
+
+		try {
+			this.twitterInstance.getFavorites(screenName).stream().filter(s -> s.getCreatedAt().after(minHour))
+					.forEach(tweet -> userLikes.add(new TwitterActivity(tweet.getUser().getScreenName(),
+							tweet.getCreatedAt(), tweet.getText())));
+		} catch (TwitterException te) {
+			te.printStackTrace();
+			System.out.println("Failed to get last tweets: " + te.getMessage());
+		}
+
+		return userLikes;
+	}
+
 }
