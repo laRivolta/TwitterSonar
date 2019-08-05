@@ -8,4 +8,4 @@ gradle clean && gradle farJar
 
 
 #### Crontab
-0 * * * * sh /{yourClonePath}/TwitterSonar/dist/run.sh
+*/30 * * * * sh /{yourClonePath}/TwitterSonar/dist/run.sh
