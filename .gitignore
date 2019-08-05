@@ -1,4 +1,7 @@
 .idea
 .gradle
+build
+gradle
 out
 twitter4j.properties
+twittersonar.csv

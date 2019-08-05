@@ -4,6 +4,22 @@ repositories {
     mavenCentral()
 }
 
+version = '1.0'
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+//create a single Jar with all dependencies
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Title': 'TwitterSonar Jar File',
+                'Implementation-Version': version,
+                'Main-Class': 'io.larivolta.twitterSonar.TwitterSonar'
+    }
+    baseName = project.name + '-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
@@ -14,6 +30,3 @@ dependencies {
 test {
     useJUnitPlatform()
 }
-
-sourceCompatibility = '1.8'
-targetCompatibility = '1.8'

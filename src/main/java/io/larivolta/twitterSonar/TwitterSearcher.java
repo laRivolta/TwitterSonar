@@ -130,7 +130,7 @@ public class TwitterSearcher {
 
 	public void writeToCsvFile(String[] strings, String separator) {
 
-		File csvFile = new File("/Users/martamanso/twittersonar.csv");
+		File csvFile = new File("twittersonar.csv");
 		if (csvFile.isFile()) {
 
 			try (FileWriter writer = new FileWriter(csvFile, true)) {
