@@ -1,4 +1,4 @@
-package io.larivolta.twitterSonar;
+package io.larivolta.twitterSonar.application;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -10,13 +10,19 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import io.larivolta.twitterSonar.model.TwitterActivity;
+import io.larivolta.twitterSonar.TwitterSonar;
+import io.larivolta.twitterSonar.domain.model.TwitterActivity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
 import twitter4j.conf.ConfigurationBuilder;
 
 public class TwitterSearcher {
+
+	private static final Logger logger = LoggerFactory.getLogger(TwitterSonar.class);
+
 	Twitter twitterInstance;
 
 	public TwitterSearcher() {
@@ -36,7 +42,7 @@ public class TwitterSearcher {
 		try {
 			List<TwitterActivity> userActivities = getUserTweetsSince(screenName, minutes);
 			userActivities.forEach(tweet -> {
-				System.out.println("@" + tweet.getScreen_name() + " - " + tweet.getCreated_at().toString() + " - "
+				logger.info("@" + tweet.getScreen_name() + " - " + tweet.getCreated_at().toString() + " - "
 						+ tweet.getText());
 			});
 
@@ -51,7 +57,7 @@ public class TwitterSearcher {
 		userActivities.addAll(getUserTweetsSince(screenName, minutes));
 		userActivities.addAll(getUserLikesSince(screenName, minutes));
 
-		System.out.println(screenName + " == " + userActivities.size());
+		logger.info(screenName + " == " + userActivities.size());
 		stringifiedUserActivities[0] = screenName;
 		stringifiedUserActivities[1] = actualHour.toString();
 		stringifiedUserActivities[2] = String.valueOf(userActivities.size());
@@ -77,8 +83,8 @@ public class TwitterSearcher {
 			headers[i + 1] = stringifiedActivities.get(i)[0]; // username
 			compiledData[i + 1] = stringifiedActivities.get(i)[2]; // userActivities
 		}
-		System.out.println(Arrays.toString(headers));
-		System.out.println(Arrays.toString(compiledData));
+		logger.info(Arrays.toString(headers));
+		logger.info(Arrays.toString(compiledData));
 		return compiledData;
 	}
 
@@ -99,8 +105,7 @@ public class TwitterSearcher {
 							tweet.getCreatedAt(), tweet.getText())));
 
 		} catch (TwitterException te) {
-			te.printStackTrace();
-			System.out.println("Failed to get last tweets: " + te.getMessage());
+			logger.error("Failed to get last tweets: " + te.getMessage());
 		}
 
 		return userTweets;
@@ -121,8 +126,7 @@ public class TwitterSearcher {
 					.forEach(tweet -> userLikes.add(new TwitterActivity(tweet.getUser().getScreenName(),
 							tweet.getCreatedAt(), tweet.getText())));
 		} catch (TwitterException te) {
-			te.printStackTrace();
-			System.out.println("Failed to get last tweets: " + te.getMessage());
+			logger.error("Failed to get last tweets: " + te.getMessage());
 		}
 
 		return userLikes;
@@ -146,7 +150,7 @@ public class TwitterSearcher {
 				e.printStackTrace();
 			}
 		} else {
-			System.out.println("ERROR: No Existe fichero");
+			logger.error("ERROR: No Existe fichero");
 		}
 
 	}

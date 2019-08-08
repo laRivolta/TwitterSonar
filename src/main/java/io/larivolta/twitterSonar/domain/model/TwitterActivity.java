@@ -1,4 +1,4 @@
-package io.larivolta.twitterSonar.model;
+package io.larivolta.twitterSonar.domain.model;
 
 import java.util.Date;
 
